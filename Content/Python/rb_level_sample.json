@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "样例：花心+四C环",
+  "width": 1080,
+  "height": 1080,
+  "skin": "default",
+  "fps": 30,
+  "rings": [
+    {"id": "r0", "name": "花心", "asset": "ring_full_red", "x": 540, "y": 540, "z": 0, "rotation": 0, "scale": 100},
+    {"id": "r1", "asset": "ring_gap_green", "x": 540, "y": 839.65, "z": 1, "rotation": 180, "scale": 70},
+    {"id": "r2", "asset": "ring_gap_blue", "x": 255.12, "y": 632.59, "z": 2, "rotation": 180, "scale": 70},
+    {"id": "r3", "asset": "ring_gap_purple", "x": 363.85, "y": 297.58, "z": 3, "rotation": 180, "scale": 70},
+    {"id": "r4", "asset": "ring_gap_orange", "x": 716.15, "y": 297.58, "z": 4, "rotation": 180, "scale": 70}
+  ],
+  "clasps": [
+    {"id": "c1", "asset": "clasp_t_blue", "ringId": "r0", "touchRingId": "r1", "angle": 90, "radius": 160, "scale": 70},
+    {"id": "c2", "asset": "clasp_t_green", "ringId": "r0", "touchRingId": "r2", "angle": 162, "radius": 160, "scale": 70},
+    {"id": "c3", "asset": "clasp_t_orange", "ringId": "r0", "touchRingId": "r3", "angle": 234, "radius": 160, "scale": 70},
+    {"id": "c4", "asset": "clasp_t_purple", "ringId": "r0", "touchRingId": "r4", "angle": 306, "radius": 160, "scale": 70}
+  ]
+}

@@ -1,0 +1,13 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "RingBuilder",
+	"Description": "解环关卡 JSON → UE 场景（程序化建模 + 解环 Sequencer 动画）。与 ring_level_builder 的 Blender 端共享 rp_core 解谜内核。",
+	"Category": "Tools",
+	"CreatedBy": "Ppppan9",
+	"CanContainContent": true,
+	"Installed": false,
+	"Modules": [],
+	"Plugins": []
+}

@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "name": "样例：花心+C环+钻戒+三环结",
+  "width": 1080,
+  "height": 1080,
+  "skin": "default",
+  "fps": 30,
+  "rings": [
+    {"id": "r0", "name": "花心", "asset": "ring_full_red", "x": 540, "y": 540, "z": 0, "rotation": 0, "scale": 100},
+    {"id": "r1", "asset": "ring_gap_green", "x": 540, "y": 839.65, "z": 1, "rotation": 180, "scale": 70},
+    {"id": "r5", "asset": "ring_full_diamond", "x": 850, "y": 850, "z": 2, "rotation": 0, "scale": 80}
+  ],
+  "clasps": [
+    {"id": "c1", "asset": "clasp_t_blue", "ringId": "r0", "touchRingId": "r1", "angle": 90, "radius": 160, "scale": 70}
+  ],
+  "props": [
+    {"id": "p1", "asset": "prop_knot_silver", "x": 540, "y": 175, "z": 3, "rotation": 0, "scale": 50}
+  ]
+}
