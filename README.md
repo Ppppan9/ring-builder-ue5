@@ -13,13 +13,19 @@
 编辑器 Python 控制台（输出日志 → Cmd/Ctrl + 输入 `py`）：
 
 ```python
-import rb_build, rb_unlock
+import rb_build, rb_unlock, rb_sand
 
 # 1) 关卡建模（俯拍相机/灯光/地面一并生成）
 rb_build.build("C:/path/to/level.json")
 
 # 2) 解环动画（Level Sequence：旋转步 → 移出 → 缩尾消失）
 rb_unlock.unlock("C:/path/to/level.json")   # 生成 /Game/RingBuilder/RB_Unlock
+
+# 3) 沙粒破碎（同步 Blender 0.3.15：实体弧段沿 C 口逐段脱落 →
+#    弧段表面分批撒出哑光细沙，减速滑停；俯拍滑动版）
+rb_sand.sand("C:/path/to/level.json")       # 生成 /Game/RingBuilder/RB_Sand
+# 参数：ring_id 指定单环 / sections 弧段数(≤14) / grains 细沙数(默认 240) /
+#       spread 散开幅度 / reverse 从另一端开始 / sweep_sec 传播时长
 ```
 
 命令行（CI/批量）：
@@ -39,7 +45,8 @@ UnrealEditor-Cmd <工程>.uproject -run=pythonscript -script="build_level.py" -s
 
 ## 首跑注意（无法在无引擎环境验证的 API 点）
 
-本插件在纯 Python 干跑（stub）下验证了全部控制流；真机首跑如遇 API 签名差异，
+本插件在纯 Python 干跑（stub）下验证了全部控制流（`tests/test_sand_stub.py`
+覆盖建模 + 解环 + 碎块 + 沙粒）；真机首跑如遇 API 签名差异，
 按下列点排查（均为 5.x 已知易变处）：
 
 1. `ProceduralMeshComponent.create_mesh_section` 重载——若报参数不匹配，改用带
@@ -62,6 +69,9 @@ UnrealEditor-Cmd <工程>.uproject -run=pythonscript -script="build_level.py" -s
 - **钻戒**：环带 + 简化明亮式圆钻（flat 刻面）+ 六爪镶（`rb_geom.gem_sections`，metal/gem 双材质 8 section）
 - **破碎**：`unlock(json, shatter=True)` 按 rp_core 碎片计划生成弧段碎片（12 片/环，
   drift/spin/缩尾关键帧，原环 hideAt 隐藏）——与 Blender 端 shatter 模式同时间轴
+- **沙粒破碎**：`rb_sand.sand(json)`——实体弧段沿 C 口逐段脱落翻滚，随后从弧段
+  自身网格分批撒出细沙（球体 Actor 关键帧滑动，非物理模拟），重跑自动替换；
+  与 Blender 0.3.15 沙粒模式同一节奏
 - 解环动画与 Blender 端同一时间轴（`rp_core.bake_timeline`：旋转步/移出 160px/缩尾）
 - 俯拍正交相机 + 主光 + 天光 + 灰色地面
 - 样例关卡：`rb_level_sample.json`（花心+四C环）、`rb_level_sample2.json`（花心+C环+钻戒+三环结）

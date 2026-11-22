@@ -7,6 +7,7 @@
 sections 返回格式：[(verts, tris, normals, uvs|None, mat_kind)]，mat_kind ∈ {"metal", "gem"}。
 """
 import math
+import random
 
 try:
     from mathutils import Vector   # Blender 端真向量（本轮三环结/钻戒逻辑全平台统一）
@@ -464,3 +465,93 @@ def shard_mesh(radius_cm, tube_cm, a_from, a_to, m=14):
             pass
         del tang
     return verts, tris, normals
+
+
+# ---------------- 沙粒破碎（同步 Blender 0.3.15：实体弧段脱落 → 分批撒出细沙） ----------------
+
+SAND_FALL_SEC = 0.16      # 实体弧段脱落滑出的时长
+SAND_CRUMBLE_SEC = 0.16   # 弧段缩小、细沙分批撒出的时长
+SAND_STOP_SEC = 0.55      # 细沙散出后减速停住的时长（俯拍滑动版）
+SAND_SECTIONS_MAX = 14
+
+
+def sphere_mesh(radius_cm, seg=8, variant=0):
+    """哑光细沙颗粒：低模球（UE/C4D 共用顶点表），variant 轻微变形避免颗粒全同。
+    返回 (verts, tris, normals)，tris 为平铺三角索引（C4D _sect_mesh 可直接用）。"""
+    rng = random.Random(101 + variant)
+    lat, lon = max(4, seg), max(6, 2 * seg)
+    jitter = 0.09 + 0.04 * (variant % 3)
+    verts, normals, tris = [], [], []
+    verts.append((0.0, 0.0, radius_cm))
+    normals.append((0.0, 0.0, 1.0))
+    rows = []
+    for i in range(1, lat):
+        phi = math.pi * i / lat
+        row = []
+        for j in range(lon):
+            th = 2.0 * math.pi * j / lon
+            nx, ny, nz = (math.sin(phi) * math.cos(th),
+                          -math.sin(phi) * math.sin(th), math.cos(phi))
+            k = 1.0 + jitter * (rng.random() - 0.5)
+            row.append(len(verts))
+            verts.append((nx * radius_cm * k, ny * radius_cm * k,
+                          nz * radius_cm * k))
+            normals.append((nx, ny, nz))
+        rows.append(row)
+    verts.append((0.0, 0.0, -radius_cm))
+    normals.append((0.0, 0.0, -1.0))
+    for j in range(lon):
+        k1 = (j + 1) % lon
+        tris.extend((0, rows[0][j], rows[0][k1]))
+        tris.extend((len(verts) - 1, rows[-1][k1], rows[-1][j]))
+    for i in range(len(rows) - 1):
+        a, b = rows[i], rows[i + 1]
+        for j in range(lon):
+            k1 = (j + 1) % lon
+            tris.extend((a[j], b[j], b[k1], a[j], b[k1], a[k1]))
+    return verts, tris, normals
+
+
+def shard_surface_samples(verts, tris, count, rng):
+    """面积加权采样碎片网格表面点（含平端面）。返回 [(x, y, z), ...]（局部 cm）。"""
+    faces, weights = [], []
+    for i in range(0, len(tris), 3):
+        a, b, c = tris[i], tris[i + 1], tris[i + 2]
+        va, vb, vc = verts[a], verts[b], verts[c]
+        ux, uy, uz = vb[0] - va[0], vb[1] - va[1], vb[2] - va[2]
+        wx, wy, wz = vc[0] - va[0], vc[1] - va[1], vc[2] - va[2]
+        cx, cy, cz = uy * wz - uz * wy, uz * wx - ux * wz, ux * wy - uy * wx
+        area = 0.5 * math.sqrt(cx * cx + cy * cy + cz * cz)
+        if area > 1e-9:
+            faces.append((va, vb, vc))
+            weights.append(area)
+    if not faces:
+        raise ValueError("碎片网格没有可采样的表面")
+    out = []
+    for va, vb, vc in rng.choices(faces, weights=weights, k=count):
+        u = math.sqrt(rng.random())
+        v = rng.random()
+        out.append(tuple((1 - u) * va[k] + u * ((1 - v) * vb[k] + v * vc[k])
+                         for k in range(3)))
+    return out
+
+
+def sand_windows(n, start_sec, sweep_sec, reverse, fps):
+    """逐段脱落时间窗（与 Blender 端同步）：返回 [(detach, crumble, end), ...] 秒。
+    整体（n==1）全部从 start_sec 开始；关键帧时间已按 fps 取整。"""
+    n = max(1, n)
+    out = []
+    for index in range(n):
+        order = n - 1 - index if reverse else index
+        detach = start_sec + (sweep_sec * order / (n - 1) if n > 1 else 0.0)
+        crumble = detach + SAND_FALL_SEC
+        end = crumble + SAND_CRUMBLE_SEC
+        out.append(tuple(round(t * fps) / fps for t in (detach, crumble, end)))
+    return out
+
+
+def sand_scatter(rng, spread, scale):
+    """单颗细沙的平面散出速度（cm/s，量级与 Blender 端同步）。"""
+    ang = rng.uniform(0.0, 2.0 * math.pi)
+    speed = spread * 45.3 * scale * (0.6 + 0.8 * rng.random())
+    return (math.cos(ang) * speed, math.sin(ang) * speed)

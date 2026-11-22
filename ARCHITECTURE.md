@@ -34,7 +34,7 @@
 |---|---|---|
 | `rp_core.py` | 关卡校验 / 扣点几何（`clasp_seat`）/ 解谜规划（`plan_unlock`）/ 时间轴（`bake_timeline`）/ 破碎计划 | 三端全部 |
 | `rb_toon.py` | 卡通色带 12 档（TOON_RING_STOPS）→ 256×1 sRGB PNG（纯 Python PNG writer） | UE（Texture 导入）/ C4D（BaseBitmap）/ Blender 走原版 ColorRamp |
-| `rb_geom.py` | 三环结扫掠（`knot_sections` 10080 顶点）/ 钻戒（`gem_sections` 环带+刻面+六爪 8 sections）/ 破碎弧段管（`shard_mesh`） | UE / C4D（Blender 端原版自带） |
+| `rb_geom.py` | 三环结扫掠（`knot_sections` 10080 顶点）/ 钻戒（`gem_sections` 环带+刻面+六爪 8 sections）/ 破碎弧段管（`shard_mesh`）/ 沙粒内核（`sphere_mesh` 颗粒网格、`shard_surface_samples` 表面采样、`sand_windows` 逐段时间窗） | UE / C4D（Blender 端原版自带等价实现） |
 | `assets_manifest.json` | 81 个素材参数（内外径/缺口角/卡扣 attach） | 三端全部 |
 
 **单位与坐标契约**：1 画布像素 = 0.1 cm（UE/C4D）= 0.001 m（Blender）；
@@ -63,11 +63,13 @@
 
 ```
 Content/Python/
-├─ rp_core / rb_toon / rb_geom   ← 共享内核（逐字复用）
+├─ rp_core / rb_toon / rb_geom   ← 共享内核（逐字复用；rb_geom 含沙粒内核）
 ├─ rb_build.py    关卡建模：PMC 手写顶点（C环/花心/T扣/三环结/
 │                 钻戒双材质）+ 卡通色带纹理材质 + 俯拍正交相机 + 灯光地面
 ├─ rb_unlock.py   Sequencer 动画：旋转步→移出→缩尾/破碎弧段碎片
 │                 （12 片/环）+ 相机 cut 绑定
+├─ rb_sand.py     沙粒破碎 Sequencer：实体弧段逐段脱落翻滚 →
+│                 弧段表面分批撒细沙（同步 Blender 0.3.15）
 └─ rb_render.py   MRQ 出片：PNG 序列 1080×1920@30 → 渲染队列 RB_AdJob
 ```
 
@@ -76,6 +78,7 @@ Content/Python/
 ```
 ring_builder_c4d.pyp
 ├─ 扩展菜单「导入关卡 JSON」→ 一键：建模+材质+层级+烘焙动画
+├─ 扩展菜单「沙粒破碎动画」→ 建模 + bake_sand（弧段脱落→分批撒细沙）
 ├─ 建模：PolygonObject 手写（同公式）+ Phong/UVWTag/纹理
 ├─ 解环：CTrack 关键帧（旋转/移出/缩尾/破碎碎片）
 └─ setup_render：画幅=关卡宽高/帧范围/PNG 序列（命令行 -nogui -render 批量）
@@ -92,6 +95,7 @@ ring_builder_c4d.pyp
 | 三环结/钻戒 | ✅ | ✅ | ✅ |
 | 解环动画（旋转/移出/淡出） | ✅ | ✅ 缩尾代替 | ✅ 缩尾代替 |
 | 破碎 | ✅ Voronoi 斜切 | ✅ 弧段碎片 | ✅ 弧段碎片 |
+| 沙粒破碎（逐段脱落→分批撒细沙） | ✅ 0.3.15 刚体+体积尘 | ✅ 关键帧滑动版 | ✅ 关键帧滑动版 |
 | 俯拍相机 | ✅ 正交 | ✅ 正交+相机 cut | 二期（透视代） |
 | 渲染出片 | ✅ kit 全链 | ✅ MRQ | ✅ 参数配置 |
 | 广告表演层 | ✅ ua-game-kit 独占 | FBX 中转 | FBX 中转 |

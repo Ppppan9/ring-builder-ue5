@@ -79,10 +79,10 @@ def _bind_camera_cut(seq, cam_actor, end_frame):
     return binding
 
 
-def _key_transform(section, frame, loc_cm, yaw_deg, scale):
+def _key_transform(section, frame, loc_cm, yaw_deg, scale, z_cm=0.0):
     ch = section.get_channels()
     x, y = loc_cm
-    vals = [x, y, 0.0, 0.0, 0.0, -yaw_deg, scale, scale, scale]
+    vals = [x, y, z_cm, 0.0, 0.0, -yaw_deg, scale, scale, scale]
     for i, v in enumerate(vals):
         ch[i].add_key(unreal.FrameNumber(frame), v)
 
