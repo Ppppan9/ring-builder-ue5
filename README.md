@@ -3,6 +3,15 @@
 解环关卡 JSON → UE5 场景（程序化建模 + 解环 Sequencer 动画）。与 Blender 端
 （ring_level_builder）和 C4D 端共享同一份 `rp_core.py` 解谜内核与 `assets_manifest.json`。
 
+## 关于
+
+本项目由 **ZCode（AI 编程 Agent）全程编写**——基于 GLM 大模型驱动，从需求分析、
+架构设计、逐模块实现到 stub 干跑测试全部由 AI 完成，人类负责提需求、验收效果和决策方向。
+
+- AI 模型：GLM（智谱）
+- Agent 框架：ZCode CLI
+- 人类角色：产品经理 + 测试验收
+
 ## 安装
 
 把 `RingBuilder/` 整个目录放入工程的 `Plugins/` 下（如 `test01/Plugins/RingBuilder`），
